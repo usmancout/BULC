@@ -44,7 +44,7 @@ const Footer: React.FC = () => {
             </a>
           </div>
           <div className="text-gray-400 text-sm">
-            <p>&copy; 2025 Bahria University GPA Calculator. Made with ❤️ by Usman</p>
+            <p>&copy; 2025 Bahria University GPA Calculator. Made by Usman</p>
           </div>
         </div>
       </div>
