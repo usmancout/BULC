@@ -1,0 +1,175 @@
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import { Course } from '../types/Course';
+
+declare module 'jspdf' {
+    interface jsPDF {
+        autoTable: (options: any) => jsPDF;
+    }
+}
+
+export const generateGPAPDF = (
+    courses: Course[],
+    gpa: number,
+    totalCredits: number,
+    totalQualityPoints: number
+) => {
+    const doc = new jsPDF();
+
+    // Set document properties
+    doc.setProperties({
+        title: 'GPA Report - Bahria University',
+        subject: 'Academic Grade Point Average Report',
+        author: 'Bahria University GPA Calculator',
+        creator: 'Bahria University GPA Calculator'
+    });
+
+    // Header
+    doc.setFillColor(34, 197, 94); // Green color
+    doc.rect(0, 0, 210, 25, 'F');
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Bahria University', 105, 12, { align: 'center' });
+    doc.setFontSize(14);
+    doc.text('Grade Point Average Report', 105, 20, { align: 'center' });
+
+    // Reset text color
+    doc.setTextColor(0, 0, 0);
+
+    // Date and time
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+    const timeStr = now.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Generated on: ${dateStr} at ${timeStr}`, 20, 35);
+
+    // GPA Summary Box
+    doc.setFillColor(240, 240, 240);
+    doc.rect(20, 45, 170, 35, 'F');
+    doc.setDrawColor(34, 197, 94);
+    doc.setLineWidth(2);
+    doc.rect(20, 45, 170, 35);
+
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(34, 197, 94);
+    doc.text('GPA SUMMARY', 105, 55, { align: 'center' });
+
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(24);
+    doc.text(`${gpa.toFixed(2)}`, 105, 68, { align: 'center' });
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Total Credits: ${totalCredits}`, 30, 75);
+    doc.text(`Quality Points: ${totalQualityPoints.toFixed(2)}`, 130, 75);
+
+    // Course Details Table
+    const tableData = courses.map((course, index) => [
+        `Course ${index + 1}`,
+        course.creditHours.toString(),
+        course.grade,
+        course.gradePoint.toFixed(2),
+        (course.creditHours * course.gradePoint).toFixed(2)
+    ]);
+
+    doc.autoTable({
+        startY: 90,
+        head: [['Course', 'Credits', 'Grade', 'Grade Points', 'Quality Points']],
+        body: tableData,
+        theme: 'grid',
+        headStyles: {
+            fillColor: [34, 197, 94],
+            textColor: [255, 255, 255],
+            fontStyle: 'bold',
+            fontSize: 11
+        },
+        bodyStyles: {
+            fontSize: 10,
+            textColor: [0, 0, 0]
+        },
+        alternateRowStyles: {
+            fillColor: [248, 248, 248]
+        },
+        columnStyles: {
+            0: { cellWidth: 40 },
+            1: { cellWidth: 25, halign: 'center' },
+            2: { cellWidth: 25, halign: 'center' },
+            3: { cellWidth: 30, halign: 'center' },
+            4: { cellWidth: 35, halign: 'center' }
+        },
+        margin: { left: 20, right: 20 }
+    });
+
+    // Grade Scale Reference
+    const finalY = (doc as any).lastAutoTable.finalY + 15;
+
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('University 4-Point Grading Scale', 20, finalY);
+
+    const gradeScaleData = [
+        ['A', '4.00', '85.00 - 100.00'],
+        ['A-', '3.70', '80.00 - 84.99'],
+        ['B+', '3.30', '75.00 - 79.99'],
+        ['B', '3.00', '70.00 - 74.99'],
+        ['B-', '2.70', '65.00 - 69.99'],
+        ['C+', '2.30', '61.00 - 64.99'],
+        ['C', '2.00', '58.00 - 60.99'],
+        ['C-', '1.70', '55.00 - 57.99'],
+        ['D', '1.00', '50.00 - 54.99'],
+        ['F', '0.00', '0.00 - 49.99']
+    ];
+
+    doc.autoTable({
+        startY: finalY + 5,
+        head: [['Grade', 'GPA Points', 'Marks Range']],
+        body: gradeScaleData,
+        theme: 'grid',
+        headStyles: {
+            fillColor: [75, 85, 99],
+            textColor: [255, 255, 255],
+            fontStyle: 'bold',
+            fontSize: 10
+        },
+        bodyStyles: {
+            fontSize: 9,
+            textColor: [0, 0, 0]
+        },
+        alternateRowStyles: {
+            fillColor: [248, 248, 248]
+        },
+        columnStyles: {
+            0: { cellWidth: 25, halign: 'center' },
+            1: { cellWidth: 30, halign: 'center' },
+            2: { cellWidth: 40, halign: 'center' }
+        },
+        margin: { left: 20, right: 20 }
+    });
+
+    // Footer
+    const pageHeight = doc.internal.pageSize.height;
+    doc.setFillColor(34, 197, 94);
+    doc.rect(0, pageHeight - 20, 210, 20, 'F');
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Generated by Bahria University GPA Calculator', 105, pageHeight - 12, { align: 'center' });
+    doc.text('© 2025 Made by Usman', 105, pageHeight - 5, { align: 'center' });
+
+    // Save the PDF
+    const fileName = `GPA_Report_${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}.pdf`;
+    doc.save(fileName);
+};
